@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <chrono>
 
 int main()
 {
@@ -12,6 +13,11 @@ int main()
         std::cerr << "Error: Could not open camera." << std::endl;
         return -1;
     }
+
+    int frameCount = 0;
+    int currentFPS = 0;
+    auto startTime = std::chrono::high_resolution_clock::now();
+    auto lastTime = startTime;
 
     // create a window to display video feed
     const std::string windowName = "Live Webcam";
@@ -35,8 +41,23 @@ int main()
             break;
         }
 
+        frameCount++;
+        auto now = std::chrono::high_resolution_clock::now();
+        double elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count(); // may have to change lastTime to start
+
+        if (elapsedTime >= 1.0)
+        {
+            currentFPS = frameCount / elapsedTime;
+            frameCount = 0;
+            startTime = now;
+        }
+
+        std::string fpsText = "FPS: " + std::to_string(currentFPS);
+        cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+
         // display frame
         cv::imshow(windowName, frame); // display the frame in the window
+        lastTime = now;
 
         if (cv::waitKey(30) == 'q')
         { // wait for 'q' key press for 30ms
