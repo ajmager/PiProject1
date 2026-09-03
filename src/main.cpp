@@ -15,7 +15,7 @@ int main()
     }
 
     int frameCount = 0;
-    int currentFPS = 0;
+    double currentFPS = 0.0;
     auto startTime = std::chrono::high_resolution_clock::now();
     auto lastTime = startTime;
 
@@ -43,7 +43,7 @@ int main()
 
         frameCount++;
         auto now = std::chrono::high_resolution_clock::now();
-        double elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count(); // may have to change lastTime to start
+        double elapsedTime = std::chrono::duration<double>(now - startTime).count();
 
         if (elapsedTime >= 1.0)
         {
