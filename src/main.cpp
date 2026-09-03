@@ -15,7 +15,7 @@ int main()
     }
 
     int frameCount = 0;
-    double currentFPS = 0.0;
+    int currentFPS = 0;
     auto startTime = std::chrono::high_resolution_clock::now();
     auto lastTime = startTime;
 
@@ -43,17 +43,17 @@ int main()
 
         frameCount++;
         auto now = std::chrono::high_resolution_clock::now();
-        double elapsedTime = std::chrono::duration<double>(now - startTime).count();
+        double elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
 
         if (elapsedTime >= 1.0)
         {
-            currentFPS = frameCount / elapsedTime;
+            currentFPS = static_cast<int>(frameCount / elapsedTime);
             frameCount = 0;
             startTime = now;
         }
 
         std::string fpsText = "FPS: " + std::to_string(currentFPS);
-        cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+        cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
 
         // display frame
         cv::imshow(windowName, frame); // display the frame in the window
