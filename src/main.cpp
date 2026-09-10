@@ -14,6 +14,7 @@ std::string getCurrentTimestamp()
 
 int main()
 {
+
     // open the default webcam
     cv::VideoCapture cap(0); // Open the default camera
 
@@ -27,7 +28,6 @@ int main()
     int frameCount = 0;
     int currentFPS = 0;
     auto startTime = std::chrono::high_resolution_clock::now();
-    // auto lastTime = startTime;
 
     // create a window to display video feed
     const std::string windowName = "Live Webcam";
@@ -35,22 +35,11 @@ int main()
 
     // matrix container to hold individual video frames
     cv::Mat frame, grayFrame, fgMask, threshFrame;
-    // cv::Mat prevGray, diffFrame; // for absdiff motion detection
 
     // new MOG2 background subtractor object
     cv::Ptr<cv::BackgroundSubtractor> pBackSub = cv::createBackgroundSubtractorMOG2(500, 20, true);
 
     std::cout << "Live Webcam V_MOG2, press 'Q' to quit." << std::endl;
-
-    /*
-    ###################################################################################
-                                    absdiff logic
-    ###################################################################################
-    cap >> frame;
-    cv::cvtColor(frame, prevGray, cv::COLOR_BGR2GRAY);         // convert to grayscale
-    cv::GaussianBlur(prevGray, prevGray, cv::Size(21, 21), 0); // apply Gaussian blur
-    ###################################################################################
-    */
 
     // --- Persistance & Cooldown Tracking ---
     int consectutiveMotionFrames = 0;
@@ -92,17 +81,6 @@ int main()
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(15, 15));
         cv::morphologyEx(threshFrame, threshFrame, cv::MORPH_CLOSE, kernel);
 
-        /*
-        // --- ABS Diff MOTION DETECTION LOGIC ---
-        cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY); // convert to grayscale
-        cv::GaussianBlur(grayFrame, grayFrame, cv::Size(21, 21), 0); // apply Gaussian blur to reduce noise and improve motion detection
-        cv::absdiff(prevGray, grayFrame, diffFrame);
-
-
-        cv::threshold(diffFrame, threshFrame, 25, 255, cv::THRESH_BINARY);
-        cv::dilate(threshFrame, threshFrame, cv::Mat(), cv::Point(-1, -1), 2);
-        */
-
         std::vector<std::vector<cv::Point>> contours;
         cv::findContours(threshFrame, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
@@ -112,11 +90,10 @@ int main()
 
         for (const auto &contour : contours)
         {
-            if (cv::contourArea(contour) > 500) // filter out small movements
-            {
+            if (cv::contourArea(contour) > 500)
+            { // filter out small movements
                 motionDetected = true;
                 cv::Rect boundingBox = cv::boundingRect(contour);
-                // cv::rectangle(frame, boundingBox, cv::Scalar(0, 0, 255), 2);
                 if (firstBox)
                 {
                     combinedBoundingBox = boundingBox;
@@ -131,7 +108,6 @@ int main()
 
         if (motionDetected)
         {
-            // std::cout << "[" << getCurrentTimestamp() << "] Motion detected!" << std::endl;
             consectutiveMotionFrames++;
         }
         else
@@ -152,14 +128,12 @@ int main()
                 lastMotionTime = now;
             }
         }
-        // prevGray = grayFrame.clone(); // update previous frame for next iteration --- absdiff logic
 
         std::string fpsText = "FPS: " + std::to_string(currentFPS);
         cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
 
         // display frame
         cv::imshow(windowName, frame); // display the frame in the window
-        // lastTime = now;
 
         if (cv::waitKey(30) == 'q')
         { // wait for 'q' key press for 30ms
