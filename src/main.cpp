@@ -88,7 +88,7 @@ int main()
         pBackSub->apply(grayFrame, fgMask, 0.01);                    // apply background subtraction
 
         cv::threshold(fgMask, threshFrame, 200, 255, cv::THRESH_BINARY);
-        cv::dilate(threshFrame, threshFrame, cv::Mat(), cv::Point(-1, -1), 8);
+        cv::dilate(threshFrame, threshFrame, cv::Mat(), cv::Point(-1, -1), 4);
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(15, 15));
         cv::morphologyEx(threshFrame, threshFrame, cv::MORPH_CLOSE, kernel);
 
