@@ -38,7 +38,7 @@ int main()
     // cv::Mat prevGray, diffFrame; // for absdiff motion detection
 
     // new MOG2 background subtractor object
-    cv::Ptr<cv::BackgroundSubtractor> pBackSub = cv::createBackgroundSubtractorMOG2(500, 16, true);
+    cv::Ptr<cv::BackgroundSubtractor> pBackSub = cv::createBackgroundSubtractorMOG2(500, 20, true);
 
     std::cout << "Live Webcam V_MOG2, press 'Q' to quit." << std::endl;
 
@@ -79,7 +79,7 @@ int main()
         // --- MOG2 MOTION DETECTION LOGIC ---
         cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);          // convert to grayscale
         cv::GaussianBlur(grayFrame, grayFrame, cv::Size(21, 21), 0); // apply Gaussian blur to reduce noise and improve motion detection
-        pBackSub->apply(grayFrame, fgMask);                          // apply background subtraction
+        pBackSub->apply(grayFrame, fgMask, 0.01);                    // apply background subtraction
 
         cv::threshold(fgMask, threshFrame, 200, 255, cv::THRESH_BINARY);
         cv::dilate(threshFrame, threshFrame, cv::Mat(), cv::Point(-1, -1), 8);
