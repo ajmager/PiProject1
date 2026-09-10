@@ -34,12 +34,23 @@ int main()
     cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
 
     // matrix container to hold individual video frames
-    cv::Mat frame, grayFrame, prevGray, diffFrame, threshFrame;
+    cv::Mat frame, grayFrame, fgMask, threshFrame;
+    // cv::Mat prevGray, diffFrame; // for absdiff motion detection
+
+    // new MOG2 background subtractor object
+    cv::Ptr<cv::BackgroundSubtractor> pBackSub = cv::createBackgroundSubtractorMOG2(500, 16, true);
 
     std::cout << "Live Webcam, press 'Q' to quit." << std::endl;
+
+    /*
+    ###################################################################################
+                                    absdiff logic
+    ###################################################################################
     cap >> frame;
     cv::cvtColor(frame, prevGray, cv::COLOR_BGR2GRAY);         // convert to grayscale
     cv::GaussianBlur(prevGray, prevGray, cv::Size(21, 21), 0); // apply Gaussian blur
+    ###################################################################################
+    */
 
     while (true)
     {
@@ -65,12 +76,24 @@ int main()
             startTime = now;
         }
 
-        // --- MOTION DETECTION LOGIC ---
-        cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);
-        cv::GaussianBlur(grayFrame, grayFrame, cv::Size(21, 21), 0);
+        // --- MOG2 MOTION DETECTION LOGIC ---
+        cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);          // convert to grayscale
+        cv::GaussianBlur(grayFrame, grayFrame, cv::Size(21, 21), 0); // apply Gaussian blur to reduce noise and improve motion detection
+        pBackSub->apply(grayFrame, fgMask);                          // apply background subtraction
+
+        cv::threshold(fgMask, threshFrame, 200, 255, cv::THRESH_BINARY);
+        cv::dilate(threshFrame, threshFrame, cv::Mat(), cv::Point(-1, -1), 2);
+
+        /*
+        // --- ABS Diff MOTION DETECTION LOGIC ---
+        cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY); // convert to grayscale
+        cv::GaussianBlur(grayFrame, grayFrame, cv::Size(21, 21), 0); // apply Gaussian blur to reduce noise and improve motion detection
         cv::absdiff(prevGray, grayFrame, diffFrame);
+
+
         cv::threshold(diffFrame, threshFrame, 25, 255, cv::THRESH_BINARY);
         cv::dilate(threshFrame, threshFrame, cv::Mat(), cv::Point(-1, -1), 2);
+        */
 
         std::vector<std::vector<cv::Point>> contours;
         cv::findContours(threshFrame, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -91,7 +114,7 @@ int main()
             std::cout << "[" << getCurrentTimestamp() << "] Motion detected!" << std::endl;
         }
 
-        prevGray = grayFrame.clone(); // update previous frame for next iteration
+        // prevGray = grayFrame.clone(); // update previous frame for next iteration --- absdiff logic
 
         std::string fpsText = "FPS: " + std::to_string(currentFPS);
         cv::putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
