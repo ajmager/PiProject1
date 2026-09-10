@@ -54,9 +54,9 @@ int main()
 
     // --- Persistance & Cooldown Tracking ---
     int consectutiveMotionFrames = 0;
-    const int motionThreshold = 5; // number of consecutive frames with motion to trigger an event
+    const int motionThreshold = 3; // number of consecutive frames with motion to trigger an event
     auto lastMotionTime = std::chrono::high_resolution_clock::now();
-    const double cooldownPeriod = 5.0; // seconds
+    const double cooldownPeriod = 3.0; // seconds
 
     while (true)
     {
