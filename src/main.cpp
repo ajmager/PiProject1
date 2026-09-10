@@ -40,7 +40,7 @@ int main()
     // new MOG2 background subtractor object
     cv::Ptr<cv::BackgroundSubtractor> pBackSub = cv::createBackgroundSubtractorMOG2(500, 16, true);
 
-    std::cout << "Live Webcam, press 'Q' to quit." << std::endl;
+    std::cout << "Live Webcam V_MOG2, press 'Q' to quit." << std::endl;
 
     /*
     ###################################################################################
