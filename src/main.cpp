@@ -27,7 +27,7 @@ int main()
     int frameCount = 0;
     int currentFPS = 0;
     auto startTime = std::chrono::high_resolution_clock::now();
-    auto lastTime = startTime;
+    // auto lastTime = startTime;
 
     // create a window to display video feed
     const std::string windowName = "Live Webcam";
@@ -51,6 +51,12 @@ int main()
     cv::GaussianBlur(prevGray, prevGray, cv::Size(21, 21), 0); // apply Gaussian blur
     ###################################################################################
     */
+
+    // --- Persistance & Cooldown Tracking ---
+    int consectutiveMotionFrames = 0;
+    const int motionThreshold = 5; // number of consecutive frames with motion to trigger an event
+    auto lastMotionTime = std::chrono::steady_clock::now();
+    const double cooldownPeriod = 5.0; // seconds
 
     while (true)
     {
@@ -101,21 +107,45 @@ int main()
         cv::findContours(threshFrame, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
         bool motionDetected = false;
+        cv::Rect combinedBoundingBox;
+        bool firstBox = true;
+
         for (const auto &contour : contours)
         {
             if (cv::contourArea(contour) > 500) // filter out small movements
             {
                 motionDetected = true;
                 cv::Rect boundingBox = cv::boundingRect(contour);
-                cv::rectangle(frame, boundingBox, cv::Scalar(0, 0, 255), 2);
+                // cv::rectangle(frame, boundingBox, cv::Scalar(0, 0, 255), 2);
+                if (firstBox)
+                {
+                    combinedBoundingBox = boundingBox;
+                    firstBox = false;
+                }
+                else
+                {
+                    combinedBoundingBox |= boundingBox; // combine bounding boxes
+                }
             }
         }
 
         if (motionDetected)
         {
-            std::cout << "[" << getCurrentTimestamp() << "] Motion detected!" << std::endl;
+            // std::cout << "[" << getCurrentTimestamp() << "] Motion detected!" << std::endl;
+            consectutiveMotionFrames++;
+        }
+        else
+        {
+            consectutiveMotionFrames = 0;
         }
 
+        bool isMotion = consectutiveMotionFrames >= motionThreshold;
+
+        if (isMotion)
+        {
+            cv::rectangle(frame, combinedBoundingBox, cv::Scalar(0, 0, 255), 2);
+            double timeSinceLastMotion = std::chrono::duration<double>(now - lastMotionTime).count();
+        }
         // prevGray = grayFrame.clone(); // update previous frame for next iteration --- absdiff logic
 
         std::string fpsText = "FPS: " + std::to_string(currentFPS);
@@ -123,7 +153,7 @@ int main()
 
         // display frame
         cv::imshow(windowName, frame); // display the frame in the window
-        lastTime = now;
+        // lastTime = now;
 
         if (cv::waitKey(30) == 'q')
         { // wait for 'q' key press for 30ms
