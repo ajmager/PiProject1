@@ -55,7 +55,7 @@ int main()
     // --- Persistance & Cooldown Tracking ---
     int consectutiveMotionFrames = 0;
     const int motionThreshold = 5; // number of consecutive frames with motion to trigger an event
-    auto lastMotionTime = std::chrono::steady_clock::now();
+    auto lastMotionTime = std::chrono::high_resolution_clock::now();
     const double cooldownPeriod = 5.0; // seconds
 
     while (true)
@@ -144,7 +144,13 @@ int main()
         if (isMotion)
         {
             cv::rectangle(frame, combinedBoundingBox, cv::Scalar(0, 0, 255), 2);
+
             double timeSinceLastMotion = std::chrono::duration<double>(now - lastMotionTime).count();
+            if (timeSinceLastMotion >= cooldownPeriod)
+            {
+                std::cout << "[" << getCurrentTimestamp() << "] Motion detected!" << std::endl;
+                lastMotionTime = now;
+            }
         }
         // prevGray = grayFrame.clone(); // update previous frame for next iteration --- absdiff logic
 
